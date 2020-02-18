@@ -1,8 +1,8 @@
 VERSION=0.1
 CFLAGS=-Werror -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wextra -Wall -O0 -ffunction-sections -fdata-sections -g
 INCLUDES=-pthread -I./include/
-LIBS=-lm -lrt
-COMMON_OBJ=main.o
+LIBS=-lm -lrt -lncurses
+COMMON_OBJ=state.o main.o
 NAME=mgm
 
 PREFIX?=/usr/local
