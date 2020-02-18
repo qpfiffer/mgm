@@ -19,17 +19,35 @@ void init(struct app_state_t *main_state) {
 	getmaxyx(stdscr, max_row, max_col);
 
 	const int window_col = max_col / 3;
-	main_state->left_w = newwin(max_row, window_col, 0, 0);
-	box(main_state->left_w, 0, 0);
-	wrefresh(main_state->left_w);
+	/* LEFT */
+	main_state->left_w_outer = newwin(max_row, window_col, 0, 0);
+	box(main_state->left_w_outer, 0, 0);
+	wrefresh(main_state->left_w_outer);
 
-	main_state->middle_w = newwin(max_row, window_col, 0, window_col);
-	box(main_state->middle_w, 0, 0);
-	wrefresh(main_state->middle_w);
+	main_state->left_w_i = newwin(max_row - 2, window_col - 2, 1, 1);
+	waddstr(main_state->left_w_i, "* This is a test string");
+	wrefresh(main_state->left_w_i);
+	/* ----- */
 
-	main_state->right_w = newwin(max_row, window_col, 0, window_col * 2);
-	box(main_state->right_w, 0, 0);
-	wrefresh(main_state->right_w);
+	/* MIDDLE */
+	main_state->middle_w_outer = newwin(max_row, window_col, 0, window_col);
+	box(main_state->middle_w_outer, 0, 0);
+	wrefresh(main_state->middle_w_outer);
+
+	main_state->middle_w_i = newwin(max_row - 2, window_col - 2, 1, window_col + 1);
+	waddstr(main_state->middle_w_i, "* This is a test string (middle)");
+	wrefresh(main_state->middle_w_i);
+	/* ----- */
+
+	/* RIGHT */
+	main_state->right_w_outer = newwin(max_row, window_col, 0, window_col * 2);
+	box(main_state->right_w_outer, 0, 0);
+	wrefresh(main_state->right_w_outer);
+
+	main_state->right_w_i = newwin(max_row - 2, window_col - 2, 1, window_col * 2 + 1);
+	waddstr(main_state->right_w_i, "* This is a test string (right)");
+	wrefresh(main_state->right_w_i);
+	/* ----- */
 }
 
 void cleanup() {
@@ -46,9 +64,12 @@ void update(struct app_state_t *main_state) {
 
 void draw(const struct app_state_t *main_state) {
 	//refresh();
-	wrefresh(main_state->left_w);
-	wrefresh(main_state->middle_w);
-	wrefresh(main_state->right_w);
+	wrefresh(main_state->left_w_outer);
+	wrefresh(main_state->left_w_i);
+	wrefresh(main_state->middle_w_outer);
+	wrefresh(main_state->middle_w_i);
+	wrefresh(main_state->right_w_outer);
+	wrefresh(main_state->right_w_i);
 }
 
 int main(int argc, char *argv[]) {
