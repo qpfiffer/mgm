@@ -7,10 +7,25 @@
 
 #include "state.h"
 
-void init() {
+#define KEY_ESCAPE 27
+
+void init(struct app_state_t *main_state) {
 	initscr();
 	noecho();
+	cbreak();
 	curs_set(FALSE);
+
+	main_state->left_w = newwin(10, 10, 0, 0);
+	box(main_state->left_w, 0, 0);
+	wrefresh(main_state->left_w);
+
+	main_state->middle_w = newwin(10, 10, 0, 10);
+	box(main_state->middle_w, 0, 0);
+	wrefresh(main_state->middle_w);
+
+	main_state->right_w = newwin(10, 10, 0, 20);
+	box(main_state->right_w, 0, 0);
+	wrefresh(main_state->right_w);
 }
 
 void cleanup() {
@@ -18,22 +33,18 @@ void cleanup() {
 }
 
 void update(struct app_state_t *main_state) {
-	int ch = 0;
-	ch = getch();
+	int ch = getchar();
 
-	const char str[] = "Last key pressed: %i";
-	char *buf = malloc(128);
-	snprintf(buf, 128, str, ch);
-	mvprintw(0, 0, buf);
-
-	if (ch == KEY_EXIT) {
+	if (ch == KEY_ESCAPE) {
 		main_state->should_exit = true;
 	}
-	free(buf);
 }
 
-void draw() {
-	refresh();
+void draw(const struct app_state_t *main_state) {
+	//refresh();
+	wrefresh(main_state->left_w);
+	wrefresh(main_state->middle_w);
+	wrefresh(main_state->right_w);
 }
 
 int main(int argc, char *argv[]) {
@@ -42,11 +53,12 @@ int main(int argc, char *argv[]) {
 
 	struct app_state_t main_state = {0};
 
-	init();
+	init(&main_state);
+	draw(&main_state);
 
 	while (!main_state.should_exit) {
 		update(&main_state);
-		draw();
+		draw(&main_state);
 	}
 
 	cleanup();
