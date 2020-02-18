@@ -25,7 +25,6 @@ void init(struct app_state_t *main_state) {
 	wrefresh(main_state->left_w_outer);
 
 	main_state->left_w_i = newwin(max_row - 2, window_col - 2, 1, 1);
-	waddstr(main_state->left_w_i, "* This is a test string");
 	wrefresh(main_state->left_w_i);
 	/* ----- */
 
@@ -35,7 +34,6 @@ void init(struct app_state_t *main_state) {
 	wrefresh(main_state->middle_w_outer);
 
 	main_state->middle_w_i = newwin(max_row - 2, window_col - 2, 1, window_col + 1);
-	waddstr(main_state->middle_w_i, "* This is a test string (middle)");
 	wrefresh(main_state->middle_w_i);
 	/* ----- */
 
@@ -45,7 +43,6 @@ void init(struct app_state_t *main_state) {
 	wrefresh(main_state->right_w_outer);
 
 	main_state->right_w_i = newwin(max_row - 2, window_col - 2, 1, window_col * 2 + 1);
-	waddstr(main_state->right_w_i, "* This is a test string (right)");
 	wrefresh(main_state->right_w_i);
 	/* ----- */
 }
@@ -59,17 +56,38 @@ void update(struct app_state_t *main_state) {
 
 	if (ch == KEY_ESCAPE) {
 		main_state->should_exit = true;
+	} else if (ch == '\t') {
+		main_state->current_window_idx += 1;
+		main_state->current_window_idx = main_state->current_window_idx % 3;
 	}
 }
 
 void draw(const struct app_state_t *main_state) {
 	//refresh();
-	wrefresh(main_state->left_w_outer);
-	wrefresh(main_state->left_w_i);
-	wrefresh(main_state->middle_w_outer);
-	wrefresh(main_state->middle_w_i);
-	wrefresh(main_state->right_w_outer);
-	wrefresh(main_state->right_w_i);
+	WINDOW *windows[][2] = {
+		{main_state->left_w_outer, main_state->left_w_i},
+		{main_state->middle_w_outer, main_state->middle_w_i},
+		{main_state->right_w_outer, main_state->right_w_i},
+	};
+	unsigned int i = 0;
+	for (i = 0; i < 3; i++) {
+		WINDOW *outer_w = windows[i][0];
+		WINDOW *inner_w = windows[i][1];
+
+		wmove(outer_w, 0, 0);
+		wmove(inner_w, 0, 0);
+
+		if (main_state->current_window_idx == i) {
+			box(outer_w, '*', '*');
+
+			wrefresh(inner_w);
+			wrefresh(outer_w);
+		} else {
+			box(outer_w, 0, 0);
+			wrefresh(outer_w);
+			wrefresh(inner_w);
+		}
+	}
 }
 
 int main(int argc, char *argv[]) {
