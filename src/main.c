@@ -15,15 +15,19 @@ void init(struct app_state_t *main_state) {
 	cbreak();
 	curs_set(FALSE);
 
-	main_state->left_w = newwin(10, 10, 0, 0);
+	int max_row, max_col;
+	getmaxyx(stdscr, max_row, max_col);
+
+	const int window_col = max_col / 3;
+	main_state->left_w = newwin(max_row, window_col, 0, 0);
 	box(main_state->left_w, 0, 0);
 	wrefresh(main_state->left_w);
 
-	main_state->middle_w = newwin(10, 10, 0, 10);
+	main_state->middle_w = newwin(max_row, window_col, 0, window_col);
 	box(main_state->middle_w, 0, 0);
 	wrefresh(main_state->middle_w);
 
-	main_state->right_w = newwin(10, 10, 0, 20);
+	main_state->right_w = newwin(max_row, window_col, 0, window_col * 2);
 	box(main_state->right_w, 0, 0);
 	wrefresh(main_state->right_w);
 }
