@@ -99,6 +99,9 @@ void draw_middle_items(const struct drawable_t *self, const struct app_state_t *
 		"Personal Log:",
 		"* Coffee: ",
 		"* Meals: ",
+		"  * Breakfast: ",
+		"  * Lunch: ",
+		"  * Dinner: ",
 		"* Ailments: ",
 	};
 
