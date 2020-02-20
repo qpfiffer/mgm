@@ -17,4 +17,3 @@ void update_state(struct app_state_t *state) {
 		state->dirty = true;
 	}
 }
-
