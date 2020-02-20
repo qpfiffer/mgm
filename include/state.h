@@ -30,7 +30,11 @@ struct app_state_t {
 struct drawable_t {
 	WINDOW *outer_w;
 	WINDOW *inner_w;
-	void (*drawable_func)(const struct drawable_t *self, const struct app_state_t *main_state);
+	void (*drawable_func)(const struct drawable_t *self,
+						  const struct app_state_t *main_state,
+						  const bool is_focused);
+
+	unsigned int highlighted_idx;
 };
 
 void init_state(struct app_state_t *state);

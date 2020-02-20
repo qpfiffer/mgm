@@ -9,8 +9,8 @@
 
 #define KEY_ESCAPE 27
 
-#define PADDING_X 1
-#define PADDING_Y 1
+#define PADDING_X 5
+#define PADDING_Y 5
 
 #define TICKER_RATE 1/60
 #define DRAW_RATE 1/60
@@ -80,10 +80,8 @@ void update(struct app_state_t *main_state) {
 	}
 }
 
-void draw_left_items(const struct drawable_t *self, const struct app_state_t *main_state) {
-	(void)main_state;
-	(void)self;
-
+void draw_left_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
+	(void)is_focused;
 	char buf[128] = {0};
 	struct tm *info = NULL;
 	info = localtime(&main_state->current_time);
@@ -92,21 +90,54 @@ void draw_left_items(const struct drawable_t *self, const struct app_state_t *ma
 	waddstr(self->inner_w, buf);
 }
 
-void draw_middle_items(const struct drawable_t *self, const struct app_state_t *main_state) {
+void draw_middle_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
 	(void)main_state;
-	(void)self;
+	int cursor_iter = 0;
+	wmove(self->inner_w, cursor_iter++, 0);
+
+	const char *items[] = {
+		"Personal Log:",
+		"* Coffee: ",
+		"* Meals: ",
+		"* Ailments: ",
+	};
+
+	unsigned int i = 0;
+	for (i = 0; i < sizeof(items)/sizeof(items[0]); i++) {
+		const char *item = items[i];
+		if (is_focused && i == self->highlighted_idx)
+			wattron(self->inner_w, A_REVERSE);
+		waddstr(self->inner_w, item);
+		wattroff(self->inner_w, A_REVERSE);
+
+		wmove(self->inner_w, cursor_iter++, 0);
+	}
 }
 
-void draw_right_items(const struct drawable_t *self, const struct app_state_t *main_state) {
+void draw_right_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
 	(void)main_state;
-	(void)self;
+	(void)is_focused;
+	int cursor_iter = 0;
+	wmove(self->inner_w, cursor_iter++, 0);
+
+	waddstr(self->inner_w, "Search: ________________");
+	wmove(self->inner_w, cursor_iter++, 0);
+
+	waddstr(self->inner_w, "* Test item 1: ");
+	wmove(self->inner_w, cursor_iter++, 0);
+
+	waddstr(self->inner_w, "* Test item 2: ");
+	wmove(self->inner_w, cursor_iter++, 0);
+
+	waddstr(self->inner_w, "* Test item 3: ");
+	wmove(self->inner_w, cursor_iter++, 0);
 }
 
 void draw(struct app_state_t *main_state) {
 	struct drawable_t windows[] = {
-		{main_state->left_w_outer, main_state->left_w_i, &draw_left_items},
-		{main_state->middle_w_outer, main_state->middle_w_i, &draw_middle_items},
-		{main_state->right_w_outer, main_state->right_w_i, &draw_right_items},
+		{main_state->left_w_outer, main_state->left_w_i, &draw_left_items, 0},
+		{main_state->middle_w_outer, main_state->middle_w_i, &draw_middle_items, 0},
+		{main_state->right_w_outer, main_state->right_w_i, &draw_right_items, 0},
 	};
 
 	main_state->draw_dt = time(NULL) - main_state->last_draw_time;
@@ -126,12 +157,13 @@ void draw(struct app_state_t *main_state) {
 			wmove(inner_w, 0, 0);
 
 			if (main_state->current_window_idx == i) {
+				windows[i].drawable_func(&windows[i], main_state, true);
 				box(outer_w, '*', '*');
 			} else {
+				windows[i].drawable_func(&windows[i], main_state, false);
 				box(outer_w, 0, 0);
 			}
 
-			windows[i].drawable_func(&windows[i], main_state);
 			wrefresh(outer_w);
 			wrefresh(inner_w);
 		}
