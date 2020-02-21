@@ -14,7 +14,7 @@ struct app_state_t {
 	WINDOW *left_w_outer, *middle_w_outer, *right_w_outer;
 	WINDOW *left_w_i, *middle_w_i, *right_w_i;
 
-	unsigned int current_window_idx;
+	int current_window_idx;
 
 	time_t current_time;
 	time_t last_time_triggered_redraw;
