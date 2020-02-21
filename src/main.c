@@ -50,6 +50,13 @@ void init(struct app_state_t *main_state) {
 	main_state->right_w_i = newwin(max_row - PADDING_X, window_col - PADDING_Y, 1, window_col * 2 + 2);
 	wrefresh(main_state->right_w_i);
 	/* ----- */
+
+	struct drawable_t windows[] = {
+		{main_state->left_w_outer, main_state->left_w_i, &draw_left_items, 0},
+		{main_state->middle_w_outer, main_state->middle_w_i, &draw_middle_items, 0},
+		{main_state->right_w_outer, main_state->right_w_i, &draw_right_items, 0},
+	};
+	memcpy(main_state->windows, &windows, sizeof(windows));
 }
 
 void cleanup() {
@@ -86,72 +93,7 @@ void update(struct app_state_t *main_state) {
 	}
 }
 
-void draw_left_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
-	(void)is_focused;
-	char buf[128] = {0};
-	struct tm *info = NULL;
-	info = localtime(&main_state->current_time);
-	strftime(buf, sizeof(buf), "%y/%m/%d (%H:%M:%S):", info);
-
-	waddstr(self->inner_w, buf);
-	memset(buf, '\0', sizeof(buf));
-	snprintf(buf, sizeof(buf), " %i", main_state->last_key_pressed);
-	waddstr(self->inner_w, buf);
-}
-
-void draw_middle_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
-	(void)main_state;
-	int cursor_iter = 0;
-	wmove(self->inner_w, cursor_iter++, 0);
-
-	const char *items[] = {
-		"Personal Log:",
-		"* Coffee: ",
-		"* Meals: ",
-		"  * Breakfast: ",
-		"  * Lunch: ",
-		"  * Dinner: ",
-		"* Ailments: ",
-	};
-
-	unsigned int i = 0;
-	for (i = 0; i < sizeof(items)/sizeof(items[0]); i++) {
-		const char *item = items[i];
-		if (is_focused && i == self->highlighted_idx)
-			wattron(self->inner_w, A_REVERSE);
-		waddstr(self->inner_w, item);
-		wattroff(self->inner_w, A_REVERSE);
-
-		wmove(self->inner_w, cursor_iter++, 0);
-	}
-}
-
-void draw_right_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
-	(void)main_state;
-	(void)is_focused;
-	int cursor_iter = 0;
-	wmove(self->inner_w, cursor_iter++, 0);
-
-	waddstr(self->inner_w, "Search: ________________");
-	wmove(self->inner_w, cursor_iter++, 0);
-
-	waddstr(self->inner_w, "* Test item 1: ");
-	wmove(self->inner_w, cursor_iter++, 0);
-
-	waddstr(self->inner_w, "* Test item 2: ");
-	wmove(self->inner_w, cursor_iter++, 0);
-
-	waddstr(self->inner_w, "* Test item 3: ");
-	wmove(self->inner_w, cursor_iter++, 0);
-}
-
 void draw(struct app_state_t *main_state) {
-	struct drawable_t windows[] = {
-		{main_state->left_w_outer, main_state->left_w_i, &draw_left_items, 0},
-		{main_state->middle_w_outer, main_state->middle_w_i, &draw_middle_items, 0},
-		{main_state->right_w_outer, main_state->right_w_i, &draw_right_items, 0},
-	};
-
 	main_state->draw_dt = time(NULL) - main_state->last_draw_time;
 	main_state->draw_dtotal += main_state->draw_dt;
 	if (!main_state->last_draw_time || main_state->draw_dtotal >= DRAW_RATE) {
@@ -160,19 +102,20 @@ void draw(struct app_state_t *main_state) {
 		if (main_state->dirty == false)
 			return;
 
-		unsigned int i = 0;
+		int i = 0;
 		for (i = 0; i < 3; i++) {
-			WINDOW *outer_w = windows[i].outer_w;
-			WINDOW *inner_w = windows[i].inner_w;
+			const struct drawable_t *current_drawable = &main_state->windows[i];
+			WINDOW *outer_w = current_drawable->outer_w;
+			WINDOW *inner_w = current_drawable->inner_w;
 
 			wmove(outer_w, 0, 0);
 			wmove(inner_w, 0, 0);
 
 			if (main_state->current_window_idx == i) {
-				windows[i].drawable_func(&windows[i], main_state, true);
+				current_drawable->drawable_func(current_drawable, main_state, true);
 				box(outer_w, '*', '*');
 			} else {
-				windows[i].drawable_func(&windows[i], main_state, false);
+				current_drawable->drawable_func(current_drawable, main_state, false);
 				box(outer_w, 0, 0);
 			}
 
