@@ -1,9 +1,6 @@
 // vim: noet ts=4 sw=4
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
+#include "app.h"
+#include "draw.h"
 #include "state.h"
 #include "vector.h"
 
@@ -56,6 +53,8 @@ void init(struct app_state_t *main_state) {
 		{main_state->middle_w_outer, main_state->middle_w_i, &draw_middle_items, 0},
 		{main_state->right_w_outer, main_state->right_w_i, &draw_right_items, 0},
 	};
+	main_state->windows = malloc(sizeof(windows));
+	memset(main_state->windows, '\0', sizeof(windows));
 	memcpy(main_state->windows, &windows, sizeof(windows));
 }
 

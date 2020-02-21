@@ -3,30 +3,19 @@
 #include <string.h>
 #include <time.h>
 
-#include <ncurses.h>
-
+#include "app.h"
 #include "vector.h"
 
 #define KEY_ESCAPE 27
 
-struct app_state_t;
-struct drawable_t {
-	WINDOW *outer_w;
-	WINDOW *inner_w;
-	void (*drawable_func)(const struct drawable_t *self,
-						  const struct app_state_t *main_state,
-						  const bool is_focused);
-
-	unsigned int highlighted_idx;
-};
-
+struct drawable_t;
 struct app_state_t {
 	bool should_exit;
 
 	WINDOW *left_w_outer, *middle_w_outer, *right_w_outer;
 	WINDOW *left_w_i, *middle_w_i, *right_w_i;
 
-	struct drawable_t windows[3];
+	struct drawable_t *windows;
 
 	int current_window_idx;
 
@@ -49,7 +38,3 @@ struct app_state_t {
 void init_state(struct app_state_t *state);
 void update_state(struct app_state_t *state);
 void update_state_with_keypress(struct app_state_t *state, const vector *key_presses);
-
-void draw_left_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused);
-void draw_middle_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused);
-void draw_right_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused);
