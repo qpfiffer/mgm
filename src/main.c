@@ -1,13 +1,10 @@
 // vim: noet ts=4 sw=4
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-#include <ncurses.h>
-
 #include "state.h"
-
-#define KEY_ESCAPE 27
 
 #define PADDING_X 5
 #define PADDING_Y 5
@@ -59,9 +56,16 @@ void cleanup() {
 }
 
 void update(struct app_state_t *main_state) {
-	main_state->update_dt = time(NULL) - main_state->last_update_time;
-	main_state->update_dtotal += main_state->update_dt;
-	if (main_state->update_dtotal > TICKER_RATE) {
+	if (main_state->last_update_time != 0) {
+		main_state->update_dt = time(NULL) - main_state->last_update_time;
+		main_state->update_dtotal += main_state->update_dt;
+	} else {
+		main_state->last_update_time = time(NULL);
+		main_state->update_dt = 0;
+		main_state->update_dtotal += TICKER_RATE;
+	}
+
+	if (main_state->update_dtotal >= TICKER_RATE) {
 		main_state->update_dtotal -= TICKER_RATE;
 
 		update_state(main_state);
@@ -70,13 +74,7 @@ void update(struct app_state_t *main_state) {
 		if (ch == ERR)
 			return;
 
-		if (ch == KEY_ESCAPE) {
-			main_state->should_exit = true;
-		} else if (ch == '\t') {
-			main_state->current_window_idx += 1;
-			main_state->current_window_idx = main_state->current_window_idx % 3;
-			main_state->dirty = true;
-		}
+		update_state_with_keypress(main_state, ch);
 	}
 }
 
@@ -87,6 +85,9 @@ void draw_left_items(const struct drawable_t *self, const struct app_state_t *ma
 	info = localtime(&main_state->current_time);
 	strftime(buf, sizeof(buf), "%y/%m/%d (%H:%M:%S):", info);
 
+	waddstr(self->inner_w, buf);
+	memset(buf, '\0', sizeof(buf));
+	snprintf(buf, sizeof(buf), " %i", main_state->last_key_pressed);
 	waddstr(self->inner_w, buf);
 }
 
@@ -145,7 +146,7 @@ void draw(struct app_state_t *main_state) {
 
 	main_state->draw_dt = time(NULL) - main_state->last_draw_time;
 	main_state->draw_dtotal += main_state->draw_dt;
-	if (main_state->draw_dtotal > DRAW_RATE) {
+	if (!main_state->last_draw_time || main_state->draw_dtotal >= DRAW_RATE) {
 		main_state->draw_dtotal -= DRAW_RATE;
 
 		if (main_state->dirty == false)

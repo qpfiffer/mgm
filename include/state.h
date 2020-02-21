@@ -4,6 +4,8 @@
 
 #include <ncurses.h>
 
+#define KEY_ESCAPE 27
+
 struct app_state_t {
 	bool should_exit;
 
@@ -13,7 +15,8 @@ struct app_state_t {
 	unsigned int current_window_idx;
 
 	time_t current_time;
-	time_t last_time_redraw;
+	time_t last_time_triggered_redraw;
+	int last_key_pressed;
 
 	// Update totals:
 	time_t last_update_time;
@@ -39,3 +42,4 @@ struct drawable_t {
 
 void init_state(struct app_state_t *state);
 void update_state(struct app_state_t *state);
+void update_state_with_keypress(struct app_state_t *state, const int ch);
