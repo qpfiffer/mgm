@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "state.h"
+#include "vector.h"
 
 #define PADDING_X 5
 #define PADDING_Y 5
@@ -74,7 +75,14 @@ void update(struct app_state_t *main_state) {
 		if (ch == ERR)
 			return;
 
-		update_state_with_keypress(main_state, ch);
+		vector *key_presses = vector_new(sizeof(int), 8);
+		vector_append(key_presses, &ch, sizeof(int));
+
+		while ((ch = getch()) != ERR) {
+			vector_append(key_presses, &ch, sizeof(int));
+		}
+
+		update_state_with_keypress(main_state, key_presses);
 	}
 }
 

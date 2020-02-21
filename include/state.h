@@ -4,6 +4,8 @@
 
 #include <ncurses.h>
 
+#include "vector.h"
+
 #define KEY_ESCAPE 27
 
 struct app_state_t {
@@ -42,4 +44,4 @@ struct drawable_t {
 
 void init_state(struct app_state_t *state);
 void update_state(struct app_state_t *state);
-void update_state_with_keypress(struct app_state_t *state, const int ch);
+void update_state_with_keypress(struct app_state_t *state, const vector *key_presses);
