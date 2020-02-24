@@ -1,7 +1,7 @@
 VERSION=0.1
 CFLAGS=-Werror -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wextra -Wall -O0 -ffunction-sections -fdata-sections -g
 INCLUDES=-pthread -I./include/
-LIBS=-lm -lrt -lncurses
+LIBS=-lm -lrt -lncurses -lsqlite3
 COMMON_OBJ=vector.o draw.o state.o main.o
 NAME=mgm
 

@@ -10,13 +10,7 @@
 #define TICKER_RATE 1/60
 #define DRAW_RATE 1/60
 
-void init(struct app_state_t *main_state) {
-	initscr();
-	noecho();
-	nodelay(stdscr, true);
-	cbreak();
-	curs_set(FALSE);
-
+void draw_init(struct app_state_t *main_state) {
 	int max_row, max_col;
 	getmaxyx(stdscr, max_row, max_col);
 
@@ -26,7 +20,7 @@ void init(struct app_state_t *main_state) {
 	box(main_state->left_w_outer, 0, 0);
 	wrefresh(main_state->left_w_outer);
 
-	main_state->left_w_i = newwin(max_row - PADDING_X, window_col - PADDING_Y, 1, 1);
+	main_state->left_w_i = newwin(max_row - PADDING_X, window_col - PADDING_Y, 1, 2);
 	wrefresh(main_state->left_w_i);
 	/* ----- */
 
@@ -58,7 +52,50 @@ void init(struct app_state_t *main_state) {
 	memcpy(main_state->windows, &windows, sizeof(windows));
 }
 
-void cleanup() {
+int data_init(struct app_state_t *main_state) {
+	// Check for file path
+	char buf[256] = {0};
+	snprintf(buf, sizeof(buf), "%s/%s", getenv("HOME"), DATABASE_PATH);
+	DIR* dir = opendir(buf);
+
+	if (dir) {
+		closedir(dir);
+	} else {
+		int ret = mkdir(buf, 0755);
+		if (!ret) {
+			printf("Could not create database directory.");
+			return ret;
+		}
+	}
+
+	char db_path_buf[512] = {0};
+	snprintf(db_path_buf, sizeof(db_path_buf), "%s/%s", buf, DATABASE_FILENAME);
+	const int ret = sqlite3_open(db_path_buf, &main_state->database);
+	if (ret != SQLITE_OK) {
+		printf("Could not open sqlite3 database.");
+		return ret;
+	}
+
+	return 0;
+}
+
+int init(struct app_state_t *main_state) {
+	initscr();
+	noecho();
+	nodelay(stdscr, true);
+	cbreak();
+	curs_set(FALSE);
+
+	int ret = 0;
+	if ((ret = data_init(main_state)))
+		return ret;
+	draw_init(main_state);
+
+	return 0;
+}
+
+void cleanup(const struct app_state_t *state) {
+	sqlite3_close(state->database);
 	endwin();
 }
 
@@ -133,14 +170,17 @@ int main(int argc, char *argv[]) {
 	struct app_state_t main_state = {0};
 
 	init_state(&main_state);
-	init(&main_state);
+	if (init(&main_state)) {
+		cleanup(&main_state);
+		return -1;
+	}
 
 	while (!main_state.should_exit) {
 		update(&main_state);
 		draw(&main_state);
 	}
 
-	cleanup();
+	cleanup(&main_state);
 
 	return 0;
 }

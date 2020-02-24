@@ -3,8 +3,7 @@
 #include "state.h"
 #include "draw.h"
 
-void draw_left_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
-	(void)is_focused;
+void draw_time(const struct drawable_t *self, const struct app_state_t *main_state) {
 	char buf[128] = {0};
 	struct tm *info = NULL;
 	info = localtime(&main_state->current_time);
@@ -14,6 +13,14 @@ void draw_left_items(const struct drawable_t *self, const struct app_state_t *ma
 	memset(buf, '\0', sizeof(buf));
 	snprintf(buf, sizeof(buf), " %i", main_state->last_key_pressed);
 	waddstr(self->inner_w, buf);
+}
+
+void draw_left_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
+	(void)is_focused;
+	int cursor_iter = 0;
+	wmove(self->inner_w, cursor_iter++, 0);
+
+	draw_time(self, main_state);
 }
 
 void draw_middle_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
