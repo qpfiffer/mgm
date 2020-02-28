@@ -27,6 +27,7 @@ void update_state_with_keypress(struct app_state_t *state, const vector *key_pre
 	int print_iter = 0;
 	bool escape_triggered = false;
 	bool square_thingie_triggered = false;
+
 	for (i = 0; i < key_presses->count; i++) {
 		const int *_ch = (int *)vector_get(key_presses, i);
 		const int ch = *_ch;
@@ -53,22 +54,28 @@ void update_state_with_keypress(struct app_state_t *state, const vector *key_pre
 				}
 				break;
 			case '\t':
-			case 67:
+			case 'l':
+			case 67: /* Right */
 				state->current_window_idx += 1;
 				state->current_window_idx = state->current_window_idx % 3;
 				state->dirty = true;
 				break;
-			case 68:
+			case 'h':
+			case 68: /* Left */
 				state->current_window_idx -= 1;
 				if (state->current_window_idx < 0)
 					state->current_window_idx = 2;
 				state->dirty = true;
 				break;
-			case 65:
+			case 'k':
+			case 65: /* Up Arrow */
 				current_drawable->highlighted_idx -= 1;
+				state->dirty = true;
 				break;
-			case 66:
+			case 'j':
+			case 66: /* Down Arrow */
 				current_drawable->highlighted_idx += 1;
+				state->dirty = true;
 				break;
 			default:
 				state->dirty = true;

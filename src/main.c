@@ -95,7 +95,7 @@ int init(struct app_state_t *main_state) {
 }
 
 void cleanup(const struct app_state_t *state) {
-	sqlite3_close(state->database);
+	sqlite3_close_v2(state->database);
 	endwin();
 }
 
