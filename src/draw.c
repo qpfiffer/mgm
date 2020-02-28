@@ -10,9 +10,7 @@ void draw_time(const struct drawable_t *self, const struct app_state_t *main_sta
 	strftime(buf, sizeof(buf), "%y/%m/%d (%H:%M:%S):", info);
 
 	waddstr(self->inner_w, buf);
-	memset(buf, '\0', sizeof(buf));
-	snprintf(buf, sizeof(buf), " %i", main_state->last_key_pressed);
-	waddstr(self->inner_w, buf);
+	waddstr(self->inner_w, main_state->last_key_pressed);
 }
 
 void draw_left_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {

@@ -53,7 +53,7 @@ void draw_init(struct app_state_t *main_state) {
 }
 
 int data_init(struct app_state_t *main_state) {
-	// Check for file path
+	/* Check for file path */
 	char buf[256] = {0};
 	snprintf(buf, sizeof(buf), "%s/%s", getenv("HOME"), DATABASE_PATH);
 	DIR* dir = opendir(buf);

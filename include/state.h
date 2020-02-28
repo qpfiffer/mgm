@@ -27,7 +27,7 @@ struct app_state_t {
 	/* The last time we triggered a redraw based on the clock ticking */
 	time_t last_time_triggered_redraw;
 	/* The last key that was pressed */
-	int last_key_pressed;
+	char last_key_pressed[32];
 
 	/* Update totals: */
 	time_t last_update_time;
