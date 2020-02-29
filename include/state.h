@@ -1,4 +1,5 @@
 // vim: noet ts=4 sw=4
+#pragma once
 #include "app.h"
 #include "vector.h"
 
@@ -48,3 +49,13 @@ struct app_state_t {
 void init_state(struct app_state_t *state);
 void update_state(struct app_state_t *state);
 void update_state_with_keypress(struct app_state_t *state, const vector *key_presses);
+
+void update_left(struct drawable_t *self,
+				 const struct app_state_t *main_state,
+				 const bool is_focused);
+void update_middle(struct drawable_t *self,
+				   const struct app_state_t *main_state,
+				   const bool is_focused);
+void update_right(struct drawable_t *self,
+				  const struct app_state_t *main_state,
+				  const bool is_focused);

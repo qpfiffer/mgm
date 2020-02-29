@@ -43,9 +43,9 @@ void draw_init(struct app_state_t *main_state) {
 	/* ----- */
 
 	struct drawable_t windows[] = {
-		{main_state->left_w_outer, main_state->left_w_i, &draw_left_items, 0},
-		{main_state->middle_w_outer, main_state->middle_w_i, &draw_middle_items, 0},
-		{main_state->right_w_outer, main_state->right_w_i, &draw_right_items, 0},
+		{main_state->left_w_outer, main_state->left_w_i, &draw_left_items, &update_left, 0, NULL, true},
+		{main_state->middle_w_outer, main_state->middle_w_i, &draw_middle_items, &update_middle, 0, NULL, true},
+		{main_state->right_w_outer, main_state->right_w_i, &draw_right_items, &update_right, 0, NULL, true},
 	};
 	main_state->windows = malloc(sizeof(windows));
 	memset(main_state->windows, '\0', sizeof(windows));
@@ -100,6 +100,7 @@ void cleanup(const struct app_state_t *state) {
 }
 
 void update(struct app_state_t *main_state) {
+	/* Initial stuff for time display and dirty flagging */
 	if (main_state->last_update_time != 0) {
 		main_state->update_dt = time(NULL) - main_state->last_update_time;
 		main_state->update_dtotal += main_state->update_dt;
@@ -109,6 +110,7 @@ void update(struct app_state_t *main_state) {
 		main_state->update_dtotal += TICKER_RATE;
 	}
 
+	/* Update loop */
 	if (main_state->update_dtotal >= TICKER_RATE) {
 		main_state->update_dtotal -= TICKER_RATE;
 

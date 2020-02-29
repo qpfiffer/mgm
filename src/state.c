@@ -28,6 +28,12 @@ void update_state_with_keypress(struct app_state_t *state, const vector *key_pre
 	bool escape_triggered = false;
 	bool square_thingie_triggered = false;
 
+	for (i = 0; i < 3; i++) {
+		struct drawable_t *i_drawable = &state->windows[i];
+		bool is_focused = (int)i == state->current_window_idx ? true : false;
+		i_drawable->update_state_func(i_drawable, state, is_focused);
+	}
+
 	for (i = 0; i < key_presses->count; i++) {
 		const int *_ch = (int *)vector_get(key_presses, i);
 		const int ch = *_ch;
@@ -82,4 +88,62 @@ void update_state_with_keypress(struct app_state_t *state, const vector *key_pre
 				break;
 		}
 	}
+}
+
+void update_left(struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
+	/* Maybe move this to state eventually? We probably don't
+	 * need to query it *all* the time.
+	 */
+	(void)is_focused;
+	if (self->should_reload_entries) {
+		if (self->entries) {
+			unsigned int i = 0;
+			for (i = 0; i < self->entries->count; i++) {
+				const struct entry_t *entry = vector_get(self->entries, i);
+				free(entry->text);
+			}
+			vector_free(self->entries);
+		}
+
+		vector *entries = vector_new(sizeof(struct entry_t), 8);
+		sqlite3_stmt *statement = NULL;
+		const char query[] = "SELECT id, parent_id, data "
+							 "FROM entry "
+							 "WHERE created_at_date = date('now') "
+							 "ORDER BY id;";
+		const char *tail = NULL;
+		sqlite3_prepare_v3(main_state->database,
+				query,
+				sizeof(query),
+				0,
+				&statement,
+				&tail);
+
+		while (sqlite3_step(statement) == SQLITE_ROW) {
+			struct entry_t new_entry = {0};
+			const char *text = (char *)sqlite3_column_text(statement, 2);
+			new_entry.text_len = sqlite3_column_bytes(statement, 2);
+
+			new_entry.text = calloc(new_entry.text_len, sizeof(char));
+			strncpy(new_entry.text, text, new_entry.text_len);
+			vector_append(entries, &new_entry, sizeof(struct entry_t));
+		}
+
+		sqlite3_finalize(statement);
+
+		self->entries = entries;
+		self->should_reload_entries = false;
+	}
+}
+
+void update_middle(struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
+	(void)self;
+	(void)main_state;
+	(void)is_focused;
+}
+
+void update_right(struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
+	(void)self;
+	(void)main_state;
+	(void)is_focused;
 }
