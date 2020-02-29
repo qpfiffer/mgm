@@ -17,6 +17,13 @@ void update_state(struct app_state_t *state) {
 		state->last_time_triggered_redraw = state->current_time;
 		state->dirty = true;
 	}
+
+	unsigned int i = 0;
+	for (i = 0; i < 3; i++) {
+		struct drawable_t *i_drawable = &state->windows[i];
+		bool is_focused = (int)i == state->current_window_idx ? true : false;
+		i_drawable->update_state_func(i_drawable, state, is_focused);
+	}
 }
 
 void update_state_with_keypress(struct app_state_t *state, const vector *key_presses) {
@@ -27,12 +34,6 @@ void update_state_with_keypress(struct app_state_t *state, const vector *key_pre
 	int print_iter = 0;
 	bool escape_triggered = false;
 	bool square_thingie_triggered = false;
-
-	for (i = 0; i < 3; i++) {
-		struct drawable_t *i_drawable = &state->windows[i];
-		bool is_focused = (int)i == state->current_window_idx ? true : false;
-		i_drawable->update_state_func(i_drawable, state, is_focused);
-	}
 
 	for (i = 0; i < key_presses->count; i++) {
 		const int *_ch = (int *)vector_get(key_presses, i);
@@ -90,20 +91,24 @@ void update_state_with_keypress(struct app_state_t *state, const vector *key_pre
 	}
 }
 
+void cleanup_entries(struct drawable_t *self) {
+	if (self->entries) {
+		unsigned int i = 0;
+		for (i = 0; i < self->entries->count; i++) {
+			const struct entry_t *entry = vector_get(self->entries, i);
+			free(entry->text);
+		}
+		vector_free(self->entries);
+	}
+}
+
 void update_left(struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
 	/* Maybe move this to state eventually? We probably don't
 	 * need to query it *all* the time.
 	 */
 	(void)is_focused;
 	if (self->should_reload_entries) {
-		if (self->entries) {
-			unsigned int i = 0;
-			for (i = 0; i < self->entries->count; i++) {
-				const struct entry_t *entry = vector_get(self->entries, i);
-				free(entry->text);
-			}
-			vector_free(self->entries);
-		}
+		cleanup_entries(self);
 
 		vector *entries = vector_new(sizeof(struct entry_t), 8);
 		sqlite3_stmt *statement = NULL;

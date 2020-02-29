@@ -35,7 +35,6 @@ void draw_left_items(const struct drawable_t *self, const struct app_state_t *ma
 			waddstr(self->inner_w, text);
 			wattroff(self->inner_w, A_REVERSE);
 			wmove(self->inner_w, cursor_iter++, 0);
-			i++;
 		}
 	}
 
