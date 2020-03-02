@@ -7,8 +7,8 @@
 #define PADDING_X 5
 #define PADDING_Y 5
 
-#define TICKER_RATE 1/60
-#define DRAW_RATE 1/60
+#define TICKER_RATE (1.0f/60.0f) * 1000
+#define DRAW_RATE (1.0f/60.0f) * 1000
 
 void draw_init(struct app_state_t *main_state) {
 	int max_row, max_col;
@@ -99,16 +99,27 @@ void cleanup(const struct app_state_t *state) {
 	endwin();
 }
 
+uint64_t get_ms_now() {
+	struct timespec t = {0};
+	clock_gettime(CLOCK_MONOTONIC, &t);
+	const uint64_t seconds = t.tv_sec * 1000;
+	const uint64_t milliseconds = t.tv_nsec / 1000000;
+
+	return seconds + milliseconds;
+}
+
 void update(struct app_state_t *main_state) {
 	/* Initial stuff for time display and dirty flagging */
+	const uint64_t now_ms = get_ms_now();
 	if (main_state->last_update_time != 0) {
-		main_state->update_dt = time(NULL) - main_state->last_update_time;
+		main_state->update_dt = now_ms - main_state->last_update_time;
 		main_state->update_dtotal += main_state->update_dt;
 	} else {
-		main_state->last_update_time = time(NULL);
 		main_state->update_dt = 0;
-		main_state->update_dtotal += TICKER_RATE;
+		main_state->update_dtotal = 0;
 	}
+
+	main_state->last_update_time = now_ms;
 
 	/* Update loop */
 	if (main_state->update_dtotal >= TICKER_RATE) {

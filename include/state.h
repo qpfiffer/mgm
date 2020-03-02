@@ -30,15 +30,19 @@ struct app_state_t {
 	/* The last key that was pressed */
 	char last_key_pressed[32];
 
+	bool insert_mode_on;
+	bool cursor_flash_show;
+	int64_t cursor_ticks_advanced;
+
 	/* Update totals: */
-	time_t last_update_time;
-	time_t update_dt;
-	time_t update_dtotal;
+	uint64_t last_update_time;
+	uint64_t update_dt;
+	uint64_t update_dtotal;
 
 	/* Draw Stuff: */
-	time_t last_draw_time;
-	time_t draw_dt;
-	time_t draw_dtotal;
+	uint64_t last_draw_time;
+	uint64_t draw_dt;
+	uint64_t draw_dtotal;
 	/* 'dirty' flags whether or not we should redraw everything */
 	bool dirty;
 

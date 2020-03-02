@@ -29,18 +29,31 @@ void draw_left_items(const struct drawable_t *self, const struct app_state_t *ma
 		for (i = 0; i < self->entries->count; i++) {
 			const struct entry_t *entry = vector_get(self->entries, i);
 			const char *text = entry->text;
+
 			waddstr(self->inner_w, "* ");
-			if (is_focused && i == self->highlighted_idx)
-				wattron(self->inner_w, A_REVERSE);
+			if (is_focused && i == self->highlighted_idx) {
+				if (!main_state->insert_mode_on) {
+					wattron(self->inner_w, A_REVERSE);
+				}
+			}
 			waddstr(self->inner_w, text);
 			wattroff(self->inner_w, A_REVERSE);
 			wmove(self->inner_w, cursor_iter++, 0);
 		}
 	}
 
+	if (main_state->insert_mode_on && main_state->cursor_flash_show) {
+	}
+
 	waddstr(self->inner_w, "* ");
-	if (is_focused && i == self->highlighted_idx)
-		wattron(self->inner_w, A_REVERSE);
+
+	if (is_focused && i == self->highlighted_idx) {
+		if (main_state->insert_mode_on && main_state->cursor_flash_show) {
+			wattron(self->inner_w, A_REVERSE);
+		} else if (!main_state->insert_mode_on) {
+			wattron(self->inner_w, A_REVERSE);
+		}
+	}
 	waddstr(self->inner_w, " ");
 	wattroff(self->inner_w, A_REVERSE);
 }

@@ -2,6 +2,8 @@
 #include "draw.h"
 #include "state.h"
 
+#define BLINK_TICK_COUNT 20
+
 void init_state(struct app_state_t *state) {
 	state->current_time = time(NULL);
 	state->last_time_triggered_redraw = 0;
@@ -11,6 +13,7 @@ void init_state(struct app_state_t *state) {
 }
 
 void update_state(struct app_state_t *state) {
+	/* Has the time turned over sufficiently to redraw? */
 	state->current_time = time(NULL);
 	if (!state->last_time_triggered_redraw ||
 			state->current_time - state->last_time_triggered_redraw >= 1) {
@@ -18,6 +21,17 @@ void update_state(struct app_state_t *state) {
 		state->dirty = true;
 	}
 
+	/* Cursor flashing stuff: */
+	if (state->insert_mode_on) {
+		state->cursor_ticks_advanced -= 1;
+		if (state->cursor_ticks_advanced <= 0) {
+			state->cursor_ticks_advanced = BLINK_TICK_COUNT;
+			state->cursor_flash_show = !state->cursor_flash_show;
+			state->dirty = true;
+		}
+	}
+
+	/* Update the state of every drawable_t (window) */
 	unsigned int i = 0;
 	for (i = 0; i < 3; i++) {
 		struct drawable_t *i_drawable = &state->windows[i];
@@ -60,6 +74,11 @@ void update_state_with_keypress(struct app_state_t *state, const vector *key_pre
 					state->dirty = true;
 				}
 				break;
+			case 'i':
+				state->insert_mode_on = !state->insert_mode_on;
+				state->cursor_ticks_advanced = BLINK_TICK_COUNT;
+				state->dirty = true;
+				break;
 			case '\t':
 			case 'l':
 			case 67: /* Right */
@@ -85,6 +104,7 @@ void update_state_with_keypress(struct app_state_t *state, const vector *key_pre
 				state->dirty = true;
 				break;
 			default:
+				/* Show the key if we pressed one. */
 				state->dirty = true;
 				break;
 		}
@@ -114,7 +134,7 @@ void update_left(struct drawable_t *self, const struct app_state_t *main_state, 
 		sqlite3_stmt *statement = NULL;
 		const char query[] = "SELECT id, parent_id, data "
 							 "FROM entry "
-							 "WHERE created_at_date = date('now') "
+							 "WHERE date(created_at_date, 'localtime') = date('now', 'localtime') "
 							 "ORDER BY id;";
 		const char *tail = NULL;
 		sqlite3_prepare_v3(main_state->database,
