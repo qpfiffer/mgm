@@ -20,9 +20,10 @@ struct drawable_t {
 	void (*update_state_func)(struct drawable_t *self,
 							  const struct app_state_t *main_state,
 							  const bool is_focused);
+	void (*ensure_highlight_correct)(struct drawable_t *self);
 
 	/* Currently highlighted item */
-	unsigned int highlighted_idx;
+	int64_t highlighted_idx;
 
 	/* Entries to display in this window */
 	vector *entries;

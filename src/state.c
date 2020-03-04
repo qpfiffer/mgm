@@ -40,6 +40,75 @@ void update_state(struct app_state_t *state) {
 	}
 }
 
+void update_state_with_keypress_insert_mode() {
+}
+
+void update_state_with_keypress_command_mode(struct app_state_t *state,
+		struct drawable_t *current_drawable,
+		const vector *key_presses,
+		const int ch,
+		bool *escape_triggered,
+		bool *square_thingie_triggered) {
+	switch (ch) {
+		case KEY_ESCAPE:
+			*escape_triggered = true;
+			if (key_presses->count <= 1) {
+				state->should_exit = true;
+			}
+			break;
+		case '[':
+			if (*escape_triggered) {
+				*square_thingie_triggered = true;
+			}
+			break;
+		case 'Z':
+			if (*escape_triggered && *square_thingie_triggered) {
+				state->current_window_idx -= 1;
+				if (state->current_window_idx < 0)
+					state->current_window_idx = 2;
+				state->dirty = true;
+			}
+			break;
+		case 'i':
+			state->insert_mode_on = !state->insert_mode_on;
+			state->cursor_ticks_advanced = BLINK_TICK_COUNT;
+			state->dirty = true;
+			break;
+		case '\t':
+		case 'l':
+		case 67: /* Right */
+			state->current_window_idx += 1;
+			state->current_window_idx = state->current_window_idx % 3;
+			state->dirty = true;
+			break;
+		case 'h':
+		case 68: /* Left */
+			state->current_window_idx -= 1;
+			if (state->current_window_idx < 0)
+				state->current_window_idx = 2;
+			state->dirty = true;
+			break;
+		case 'k':
+		case 65: /* Up Arrow */
+			current_drawable->highlighted_idx -= 1;
+			if (current_drawable->ensure_highlight_correct)
+				current_drawable->ensure_highlight_correct(current_drawable);
+			state->dirty = true;
+			break;
+		case 'j':
+		case 66: /* Down Arrow */
+			current_drawable->highlighted_idx += 1;
+			if (current_drawable->ensure_highlight_correct)
+				current_drawable->ensure_highlight_correct(current_drawable);
+			state->dirty = true;
+			break;
+		default:
+			/* Show the key if we pressed one. */
+			state->dirty = true;
+			break;
+	}
+}
+
 void update_state_with_keypress(struct app_state_t *state, const vector *key_presses) {
 	struct drawable_t *current_drawable = &state->windows[state->current_window_idx];
 	unsigned int i = 0;
@@ -54,59 +123,15 @@ void update_state_with_keypress(struct app_state_t *state, const vector *key_pre
 		const int ch = *_ch;
 
 		print_iter += snprintf(state->last_key_pressed + print_iter, sizeof(state->last_key_pressed) - print_iter, " %i,", ch);
-		switch (ch) {
-			case KEY_ESCAPE:
-				escape_triggered = true;
-				if (key_presses->count <= 1) {
-					state->should_exit = true;
-				}
-				break;
-			case '[':
-				if (escape_triggered) {
-					square_thingie_triggered = true;
-				}
-				break;
-			case 'Z':
-				if (escape_triggered && square_thingie_triggered) {
-					state->current_window_idx -= 1;
-					if (state->current_window_idx < 0)
-						state->current_window_idx = 2;
-					state->dirty = true;
-				}
-				break;
-			case 'i':
-				state->insert_mode_on = !state->insert_mode_on;
-				state->cursor_ticks_advanced = BLINK_TICK_COUNT;
-				state->dirty = true;
-				break;
-			case '\t':
-			case 'l':
-			case 67: /* Right */
-				state->current_window_idx += 1;
-				state->current_window_idx = state->current_window_idx % 3;
-				state->dirty = true;
-				break;
-			case 'h':
-			case 68: /* Left */
-				state->current_window_idx -= 1;
-				if (state->current_window_idx < 0)
-					state->current_window_idx = 2;
-				state->dirty = true;
-				break;
-			case 'k':
-			case 65: /* Up Arrow */
-				current_drawable->highlighted_idx -= 1;
-				state->dirty = true;
-				break;
-			case 'j':
-			case 66: /* Down Arrow */
-				current_drawable->highlighted_idx += 1;
-				state->dirty = true;
-				break;
-			default:
-				/* Show the key if we pressed one. */
-				state->dirty = true;
-				break;
+		if (state->insert_mode_on) {
+			update_state_with_keypress_insert_mode();
+		} else {
+			update_state_with_keypress_command_mode(state,
+					current_drawable,
+					key_presses,
+					ch,
+					&escape_triggered,
+					&square_thingie_triggered);
 		}
 	}
 }
@@ -119,13 +144,25 @@ void cleanup_entries(struct drawable_t *self) {
 			free(entry->text);
 		}
 		vector_free(self->entries);
+		self->entries = NULL;
+	}
+}
+
+void ensure_left_highlight_correct(struct drawable_t *self) {
+	if (self->entries && self->entries->count > 0) {
+		if (self->highlighted_idx > (int64_t)self->entries->count + 1 ||
+			self->highlighted_idx < 0) {
+			self->highlighted_idx = (self->highlighted_idx % self->entries->count) % self->entries->count;
+		}
+	} else {
+		if (self->highlighted_idx >= 1 ||
+				self->highlighted_idx < 0) {
+			self->highlighted_idx = 0;
+		}
 	}
 }
 
 void update_left(struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
-	/* Maybe move this to state eventually? We probably don't
-	 * need to query it *all* the time.
-	 */
 	(void)is_focused;
 	if (self->should_reload_entries) {
 		cleanup_entries(self);

@@ -21,7 +21,7 @@ struct app_state_t {
 	struct drawable_t *windows;
 
 	/* Which window is highlighted */
-	int current_window_idx;
+	int64_t current_window_idx;
 
 	/* Current time is the current time in the top-left corner */
 	time_t current_time;
@@ -54,6 +54,7 @@ void init_state(struct app_state_t *state);
 void update_state(struct app_state_t *state);
 void update_state_with_keypress(struct app_state_t *state, const vector *key_presses);
 
+void ensure_left_highlight_correct(struct drawable_t *self);
 void update_left(struct drawable_t *self,
 				 const struct app_state_t *main_state,
 				 const bool is_focused);

@@ -7,7 +7,7 @@
 #define PADDING_X 5
 #define PADDING_Y 5
 
-#define TICKER_RATE (1.0f/60.0f) * 1000
+#define TICKER_RATE (1.0f/30.0f) * 1000
 #define DRAW_RATE (1.0f/60.0f) * 1000
 
 void draw_init(struct app_state_t *main_state) {
@@ -43,9 +43,9 @@ void draw_init(struct app_state_t *main_state) {
 	/* ----- */
 
 	struct drawable_t windows[] = {
-		{main_state->left_w_outer, main_state->left_w_i, &draw_left_items, &update_left, 0, NULL, true},
-		{main_state->middle_w_outer, main_state->middle_w_i, &draw_middle_items, &update_middle, 0, NULL, true},
-		{main_state->right_w_outer, main_state->right_w_i, &draw_right_items, &update_right, 0, NULL, true},
+		{main_state->left_w_outer, main_state->left_w_i, &draw_left_items, &update_left, &ensure_left_highlight_correct, 0, NULL, true},
+		{main_state->middle_w_outer, main_state->middle_w_i, &draw_middle_items, &update_middle, NULL, 0, NULL, true},
+		{main_state->right_w_outer, main_state->right_w_i, &draw_right_items, &update_right, NULL, 0, NULL, true},
 	};
 	main_state->windows = malloc(sizeof(windows));
 	memset(main_state->windows, '\0', sizeof(windows));
@@ -143,8 +143,13 @@ void update(struct app_state_t *main_state) {
 }
 
 void draw(struct app_state_t *main_state) {
-	main_state->draw_dt = time(NULL) - main_state->last_draw_time;
-	main_state->draw_dtotal += main_state->draw_dt;
+	const uint64_t now_ms = get_ms_now();
+	if (main_state->last_draw_time != 0) {
+		main_state->draw_dt = now_ms - main_state->last_draw_time;
+		main_state->draw_dtotal += main_state->draw_dt;
+	}
+
+	main_state->last_draw_time = now_ms;
 	if (!main_state->last_draw_time || main_state->draw_dtotal >= DRAW_RATE) {
 		main_state->draw_dtotal -= DRAW_RATE;
 
