@@ -40,7 +40,63 @@ void update_state(struct app_state_t *state) {
 	}
 }
 
-void update_state_with_keypress_insert_mode() {
+void exit_insert_mode(struct app_state_t *state,
+		struct drawable_t *current_drawable) {
+	(void)current_drawable;
+	state->insert_mode_on = false;
+	state->cursor_ticks_advanced = BLINK_TICK_COUNT;
+	state->dirty = true;
+}
+
+void enter_insert_mode(struct app_state_t *state,
+		struct drawable_t *current_drawable) {
+	state->insert_mode_on = true;
+	state->cursor_ticks_advanced = BLINK_TICK_COUNT;
+	state->dirty = true;
+
+	/* Are we creating a new entry, or editing an existing one? */
+	if (current_drawable->entries) {
+		if (current_drawable->highlighted_idx == (int64_t)current_drawable->entries->count) {
+			/* New entry at bottom */
+			struct entry_t new_entry = {
+				.id = 0,
+				.text = NULL,
+				.text_len = 0
+			};
+			vector_append(current_drawable->entries, &new_entry, sizeof(new_entry));
+		}
+	} else {
+		vector *entries = vector_new(sizeof(struct entry_t), 8);
+		current_drawable->entries = entries;
+		struct entry_t new_entry = {
+			.id = 0,
+			.text = NULL,
+			.text_len = 0
+		};
+		vector_append(entries, &new_entry, sizeof(new_entry));
+	}
+}
+
+void update_state_with_keypress_insert_mode(struct app_state_t *state,
+		struct drawable_t *current_drawable,
+		const vector *key_presses,
+		const int ch,
+		bool *escape_triggered,
+		bool *square_thingie_triggered) {
+	(void)escape_triggered;
+	(void)square_thingie_triggered;
+	(void)current_drawable;
+	switch (ch) {
+		case KEY_ESCAPE:
+			*escape_triggered = true;
+			if (key_presses->count <= 1)
+				exit_insert_mode(state, current_drawable);
+			break;
+		default:
+			/* Show the key if we pressed one. */
+			state->dirty = true;
+			break;
+	}
 }
 
 void update_state_with_keypress_command_mode(struct app_state_t *state,
@@ -70,9 +126,7 @@ void update_state_with_keypress_command_mode(struct app_state_t *state,
 			}
 			break;
 		case 'i':
-			state->insert_mode_on = !state->insert_mode_on;
-			state->cursor_ticks_advanced = BLINK_TICK_COUNT;
-			state->dirty = true;
+			enter_insert_mode(state, current_drawable);
 			break;
 		case '\t':
 		case 'l':
@@ -124,7 +178,12 @@ void update_state_with_keypress(struct app_state_t *state, const vector *key_pre
 
 		print_iter += snprintf(state->last_key_pressed + print_iter, sizeof(state->last_key_pressed) - print_iter, " %i,", ch);
 		if (state->insert_mode_on) {
-			update_state_with_keypress_insert_mode();
+			update_state_with_keypress_insert_mode(state,
+					current_drawable,
+					key_presses,
+					ch,
+					&escape_triggered,
+					&square_thingie_triggered);
 		} else {
 			update_state_with_keypress_command_mode(state,
 					current_drawable,
@@ -150,9 +209,9 @@ void cleanup_entries(struct drawable_t *self) {
 
 void ensure_left_highlight_correct(struct drawable_t *self) {
 	if (self->entries && self->entries->count > 0) {
-		if (self->highlighted_idx > (int64_t)self->entries->count + 1 ||
+		if (self->highlighted_idx > (int64_t)self->entries->count ||
 			self->highlighted_idx < 0) {
-			self->highlighted_idx = (self->highlighted_idx % self->entries->count) % self->entries->count;
+			self->highlighted_idx = (self->highlighted_idx % self->entries->count - 1) % self->entries->count + 1;
 		}
 	} else {
 		if (self->highlighted_idx >= 1 ||

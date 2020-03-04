@@ -33,29 +33,25 @@ void draw_left_items(const struct drawable_t *self, const struct app_state_t *ma
 			waddstr(self->inner_w, "* ");
 			if (is_focused && i == self->highlighted_idx) {
 				if (!main_state->insert_mode_on) {
+					/* Focused, insert mode off, highlighted. */
 					wattron(self->inner_w, A_REVERSE);
+					waddstr(self->inner_w, text);
+					wattroff(self->inner_w, A_REVERSE);
+				} else if (main_state->insert_mode_on && main_state->cursor_flash_show) {
+					wattron(self->inner_w, A_REVERSE);
+					waddstr(self->inner_w, text);
+					waddstr(self->inner_w, " ");
+					wattroff(self->inner_w, A_REVERSE);
 				}
+			} else {
+				/* Non-focused */
+				waddstr(self->inner_w, text);
 			}
-			waddstr(self->inner_w, text);
+
 			wattroff(self->inner_w, A_REVERSE);
 			wmove(self->inner_w, cursor_iter++, 0);
 		}
 	}
-
-	if (main_state->insert_mode_on && main_state->cursor_flash_show) {
-	}
-
-	waddstr(self->inner_w, "* ");
-
-	if (is_focused && i == self->highlighted_idx) {
-		if (main_state->insert_mode_on && main_state->cursor_flash_show) {
-			wattron(self->inner_w, A_REVERSE);
-		} else if (!main_state->insert_mode_on) {
-			wattron(self->inner_w, A_REVERSE);
-		}
-	}
-	waddstr(self->inner_w, " ");
-	wattroff(self->inner_w, A_REVERSE);
 }
 
 void draw_middle_items(const struct drawable_t *self, const struct app_state_t *main_state, const bool is_focused) {
